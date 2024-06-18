@@ -42,7 +42,7 @@ namespace InheritanceDataBlocks.Inheritance
 
             if (_init)
             {
-                ResolveInheritance(ID, block);
+                ResolveInheritance(ID);
                 if (Configuration.DebugChains)
                     _root.DebugPrintAllPaths(GameDataBlockBase<T>.m_fileNameNoExt);
             }
@@ -62,7 +62,7 @@ namespace InheritanceDataBlocks.Inheritance
             _init = true;
         }
 
-        private void ResolveInheritance(uint ID, T? block = null)
+        private void ResolveInheritance(uint ID)
         {
             LinkedList<InheritanceNode<T>>? inheritanceList = _root.GetInheritanceList(ID);
             if (inheritanceList == null || inheritanceList.Count == 0)
@@ -71,11 +71,10 @@ namespace InheritanceDataBlocks.Inheritance
                 return;
             }
 
-            block ??= GameDataBlockBase<T>.GetBlock(ID);
             T baseBlock = GameDataBlockBase<T>.GetBlock(inheritanceList.First!.Value.ParentID);
             if (baseBlock == null)
             {
-                IDBLogger.Error("Error on ID " + ID + ": unable to find parent block with ID " + inheritanceList.First!.Value.ParentID + " in " + block.GetType().Name);
+                IDBLogger.Error("Error on ID " + ID + ": unable to find parent block with ID " + inheritanceList.First!.Value.ParentID + " in " + GameDataBlockBase<T>.m_fileNameNoExt);
                 return;
             }
 
@@ -86,7 +85,7 @@ namespace InheritanceDataBlocks.Inheritance
             foreach (InheritanceNode<T> node in inheritanceList)
                 foreach (PropertyInfo property in node.Properties)
                     property.SetValue(newBlock, property.GetValue(node.Data));
-            PropertyUtil.CopyProperties(newBlock, block);
+            PropertyUtil.CopyProperties(newBlock, inheritanceList.Last!.Value.Data);
         }
 
         public PropertyInfo? CacheProperty(Type blockType, string name)
