@@ -6,7 +6,6 @@ using System.Text;
 
 namespace InheritanceDataBlocks.Inheritance
 {
-
     public class InheritanceNode<T>
     {
         public uint ID { get; private set; }
@@ -30,7 +29,6 @@ namespace InheritanceDataBlocks.Inheritance
         public void Clear() => _nodes.Clear();
 
         public bool AddNode(uint ID, T data, List<PropertyInfo> properties, uint parentID) => AddNode(new InheritanceNode<T>(ID, data, properties, parentID));
-
         public bool AddNode(InheritanceNode<T> newNode)
         {
             // Check for dependency cycle
