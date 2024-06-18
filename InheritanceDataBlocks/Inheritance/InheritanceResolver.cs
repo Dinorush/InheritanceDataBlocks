@@ -20,33 +20,15 @@ namespace InheritanceDataBlocks.Inheritance
         private InheritanceRoot<T> _root = new();
         private readonly Dictionary<string, PropertyInfo> _propertyCache = new();
 
-        private bool _init = false;
-
         public InheritanceResolver()
         {
             InheritanceResolverManager.RegisterResolver(this);
         }
 
+        internal static InheritanceRoot<T> GetRoot() => Instance._root;
+
         // Only resets the inheritance tree to be blank. Does not reset affected DataBlocks!
-        public void Reset()
-        {
-            _root.Clear();
-            _init = false;
-        }
-
-        public void AddDataBlock(T block, List<PropertyInfo> properties, uint parentID)
-        {
-            uint ID = block.persistentID;
-            InheritanceNode<T> newNode = new(ID, block, properties, parentID);
-            _root.AddNode(newNode);
-
-            if (_init)
-            {
-                ResolveInheritance(ID);
-                if (Configuration.DebugChains)
-                    _root.DebugPrintAllPaths(GameDataBlockBase<T>.m_fileNameNoExt);
-            }
-        }
+        public void Reset() => _root.Clear();
 
         public void Run()
         {
@@ -56,18 +38,16 @@ namespace InheritanceDataBlocks.Inheritance
             if (Configuration.DebugChains)
                 _root.DebugPrintAllPaths(GameDataBlockBase<T>.m_fileNameNoExt);
 
-            // Free up memory since we no longer need it. Will slow down hot reload since cache must repopulate.
-            // May still cache stuff after Run(), but it is unlikely there'll be a lot, so it's fine.
+            // Free up memory since we no longer need it. Will slow down hot reload/other mods since cache must repopulate.
             _propertyCache.Clear();
-            _init = true;
         }
 
         private void ResolveInheritance(uint ID)
         {
             LinkedList<InheritanceNode<T>>? inheritanceList = _root.GetInheritanceList(ID);
-            if (inheritanceList == null || inheritanceList.Count == 0)
+            if (inheritanceList == null)
             {
-                IDBLogger.Error("Inheritance list for ID " + ID + " is null or empty! Block: " + GameDataBlockBase<T>.m_fileNameNoExt);
+                IDBLogger.Error("Inheritance list for ID " + ID + " is null! Block: " + GameDataBlockBase<T>.m_fileNameNoExt);
                 return;
             }
 

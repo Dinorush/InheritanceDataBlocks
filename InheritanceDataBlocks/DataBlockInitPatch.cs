@@ -7,6 +7,7 @@ namespace InheritanceDataBlocks
     [HarmonyPatch(typeof(GameDataInit), nameof(GameDataInit.Initialize))]
     internal static class DataBlockReInitPatch
     {
+        [HarmonyPriority(Priority.High)]
         [HarmonyWrapSafe]
         private static void Prefix()
         {
@@ -14,7 +15,6 @@ namespace InheritanceDataBlocks
         }
 
         [HarmonyPriority(Priority.High)]
-        [HarmonyPostfix]
         [HarmonyWrapSafe]
         private static void Postfix()
         {

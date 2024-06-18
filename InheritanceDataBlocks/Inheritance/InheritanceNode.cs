@@ -40,6 +40,8 @@ namespace InheritanceDataBlocks.Inheritance
 
         public void Clear() => _subtreePath.Clear();
 
+        public bool AddNode(uint ID, T data, List<PropertyInfo> properties, uint parentID) => AddNode(new InheritanceNode<T>(ID, data, properties, parentID));
+
         public bool AddNode(InheritanceNode<T> newNode)
         {
             // Check for dependency cycle (

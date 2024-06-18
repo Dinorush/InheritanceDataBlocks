@@ -1,12 +1,12 @@
 ﻿using GameData;
 using Il2CppJsonNet.Linq;
-using InheritanceDataBlocks.Inheritance;
 using InjectLib.JsonNETInjection.Handler;
 using InjectLib.JsonNETInjection;
 using Il2CppSystem.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 using System;
+using InheritanceDataBlocks.API;
 
 namespace InheritanceDataBlocks
 {
@@ -26,12 +26,12 @@ namespace InheritanceDataBlocks
                     if (jProperties[i].Name == "parentID")
                         continue;
 
-                    PropertyInfo? info = InheritanceResolver<T>.Instance.CacheProperty(type, jProperties[i].Name);
+                    PropertyInfo? info = InheritanceAPI<T>.CacheProperty(type, jProperties[i].Name);
                     if (info != null)
                         properties.Add(info);
                 }
 
-                InheritanceResolver<T>.Instance.AddDataBlock(result.TryCast<T>()!, properties, (uint)idToken);
+                InheritanceAPI<T>.AddDataBlock(result.TryCast<T>()!, properties, (uint)idToken);
             }
         }
     }
