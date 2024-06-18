@@ -91,6 +91,7 @@ namespace InheritanceDataBlocks.InheritanceResolver
             while (SubtreePath(node).ContainsKey(trgtNode.ID))
             {
                 next = SubtreePath(node)[trgtNode.ID];
+                SubtreePath(node).Remove(trgtNode.ID);
                 // Remove all nodes that are a child of the target node
                 foreach (uint ID in trgtNode.GetIDs())
                     SubtreePath(node).Remove(ID);
