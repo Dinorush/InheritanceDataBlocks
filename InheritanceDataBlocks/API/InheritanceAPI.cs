@@ -16,5 +16,6 @@ namespace InheritanceDataBlocks.API
         public static bool AddNode(uint ID, T data, List<PropertyInfo> properties, uint parentID) => InheritanceResolver<T>.GetRoot().AddNode(ID, data, properties, parentID);
         public static bool AddNode(InheritanceNode<T> node) => InheritanceResolver<T>.GetRoot().AddNode(node);
         public static LinkedList<InheritanceNode<T>>? GetInheritanceList(uint ID) => InheritanceResolver<T>.GetRoot().GetInheritanceList(ID);
+        public static void DebugPrintAllPaths(string? groupName = null) => InheritanceResolver<T>.GetRoot().DebugPrintAllPaths(groupName);
     }
 }
