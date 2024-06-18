@@ -37,9 +37,6 @@ namespace InheritanceDataBlocks.Inheritance
 
             if (Configuration.DebugChains)
                 _root.DebugPrintAllPaths(GameDataBlockBase<T>.m_fileNameNoExt);
-
-            // Free up memory since we no longer need it. Will slow down hot reload/other mods since cache must repopulate.
-            _propertyCache.Clear();
         }
 
         private void ResolveInheritance(uint ID)
