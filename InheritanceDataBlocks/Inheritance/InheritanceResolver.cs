@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace InheritanceDataBlocks.InheritanceResolver
+namespace InheritanceDataBlocks.Inheritance
 {
     internal interface IResolver
     {

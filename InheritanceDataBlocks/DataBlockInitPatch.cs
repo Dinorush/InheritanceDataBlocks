@@ -1,6 +1,6 @@
 ﻿using GameData;
 using HarmonyLib;
-using InheritanceDataBlocks.InheritanceResolver;
+using InheritanceDataBlocks.Inheritance;
 
 namespace InheritanceDataBlocks
 {

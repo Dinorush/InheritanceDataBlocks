@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace InheritanceDataBlocks.InheritanceResolver
+namespace InheritanceDataBlocks.Inheritance
 {
     public abstract class InheritanceNodeBase<T>
     {

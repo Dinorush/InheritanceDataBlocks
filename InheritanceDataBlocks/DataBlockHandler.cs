@@ -1,6 +1,6 @@
 ﻿using GameData;
 using Il2CppJsonNet.Linq;
-using InheritanceDataBlocks.InheritanceResolver;
+using InheritanceDataBlocks.Inheritance;
 using InjectLib.JsonNETInjection.Handler;
 using InjectLib.JsonNETInjection;
 using Il2CppSystem.Linq;
