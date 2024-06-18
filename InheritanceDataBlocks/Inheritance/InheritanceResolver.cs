@@ -31,7 +31,7 @@ namespace InheritanceDataBlocks.Inheritance
         // Only resets the inheritance tree to be blank. Does not reset affected DataBlocks!
         public void Reset()
         {
-            _root = new();
+            _root.Clear();
             _init = false;
         }
 

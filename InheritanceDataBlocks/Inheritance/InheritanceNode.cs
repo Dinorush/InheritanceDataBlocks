@@ -36,6 +36,8 @@ namespace InheritanceDataBlocks.Inheritance
     {
         public InheritanceRoot() : base(0) { }
 
+        public void Clear() => _subtreePath.Clear();
+
         public bool AddNode(InheritanceNode<T> newNode)
         {
             // Check for dependency cycle (
