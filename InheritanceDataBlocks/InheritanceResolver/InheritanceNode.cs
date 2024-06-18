@@ -1,56 +1,54 @@
-﻿using GameData;
-using InheritanceDataBlocks.Utils;
+﻿using InheritanceDataBlocks.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace InheritanceDataBlocks.InheritanceResolver
 {
-    public abstract class DataBlockNodeBase<T> where T : GameDataBlockBase<T>
+    public abstract class InheritanceNodeBase<T>
     {
         public uint ID { get; private set; }
         // Exclusive list (does not include itself). Contains the next node on the path to the node with the key ID.
-        protected readonly Dictionary<uint, DataBlockNode<T>> _subtreePath = new();
+        protected readonly Dictionary<uint, InheritanceNode<T>> _subtreePath = new();
         // So any subclass can get the path dict of another
-        protected static Dictionary<uint, DataBlockNode<T>> SubtreePath(DataBlockNodeBase<T> node) => node._subtreePath;
+        protected static Dictionary<uint, InheritanceNode<T>> SubtreePath(InheritanceNodeBase<T> node) => node._subtreePath;
 
-        public DataBlockNodeBase(uint ID) { this.ID = ID; }
+        public InheritanceNodeBase(uint ID) { this.ID = ID; }
 
         public ICollection<uint> GetIDs() { return _subtreePath.Keys; }
     }
 
-    public class DataBlockNode<T> : DataBlockNodeBase<T> where T : GameDataBlockBase<T>
+    public class InheritanceNode<T> : InheritanceNodeBase<T>
     {
         public uint ParentID { get; private set; }
         public string[] Names { get; private set; }
-        public GameDataBlockBase<T> Block { get; private set; }
+        public T Data { get; private set; }
 
-        public DataBlockNode(uint ID, GameDataBlockBase<T> block, string[] names, uint parentID) : base(ID)
+        public InheritanceNode(uint ID, T data, string[] names, uint parentID) : base(ID)
         {
             Names = names;
-            Block = block;
+            Data = data;
             ParentID = parentID;
         }
     }
 
-    public class DataBlockRoot<T> : DataBlockNodeBase<T> where T : GameDataBlockBase<T>
+    public class InheritanceRoot<T> : InheritanceNodeBase<T>
     {
-        public DataBlockRoot() : base(0) { }
+        public InheritanceRoot() : base(0) { }
 
-        public void AddNode(DataBlockNode<T> newNode)
+        public bool AddNode(InheritanceNode<T> newNode)
         {
             // Check for dependency cycle (
             if (_subtreePath.ContainsKey(newNode.ParentID) && _subtreePath[newNode.ParentID].ParentID == newNode.ID)
             {
                 IDBLogger.Error("Error adding ID " + newNode.ID + ": dependency cycle detected with ID " + _subtreePath[newNode.ParentID].ID
-                                + " on block " + newNode.Block.GetType().Name);
-                return;
+                                + " on data " + newNode.Data?.GetType().Name);
+                return false;
             }
 
-            if (TryGetNode(newNode.ID, out var oldNode))
-                RemoveNode(oldNode!);
+            RemoveNode(newNode.ID);
 
-            DataBlockNodeBase<T> node = this;
+            InheritanceNodeBase<T> node = this;
             // If there is a path to the parent, follow parent's path
             while (SubtreePath(node).ContainsKey(newNode.ParentID))
             {
@@ -69,12 +67,27 @@ namespace InheritanceDataBlocks.InheritanceResolver
                 _subtreePath.Remove(kv.Key);
                 AddNode(kv.Value);
             }
+
+            return true;
         }
 
-        public virtual void RemoveNode(DataBlockNode<T> trgtNode)
+        public bool RemoveNode(uint ID)
         {
-            DataBlockNodeBase<T> node = this;
-            DataBlockNodeBase<T> next;
+            if (TryGetNode(ID, out var node))
+            {
+                RemoveNode(node!);
+                return true;
+            }
+            return false;
+        }
+
+        public bool RemoveNode(InheritanceNode<T> trgtNode)
+        {
+            if (!_subtreePath.ContainsKey(trgtNode.ID))
+                return false;
+
+            InheritanceNodeBase<T> node = this;
+            InheritanceNodeBase<T> next;
             while (SubtreePath(node).ContainsKey(trgtNode.ID))
             {
                 next = SubtreePath(node)[trgtNode.ID];
@@ -87,42 +100,44 @@ namespace InheritanceDataBlocks.InheritanceResolver
             // Move any IDs in the target node up to root (they no longer have a parent since chain is broken)
             foreach (uint ID in trgtNode.GetIDs())
                 _subtreePath[ID] = SubtreePath(trgtNode)[ID];
+
+            return true;
         }
 
-        public DataBlockNode<T>? GetNode(uint ID)
+        public InheritanceNode<T>? GetNode(uint ID)
         {
             // Node is not in subtree, so it must not exist
             if (!_subtreePath.ContainsKey(ID))
                 return null;
 
-            DataBlockNode<T> node = _subtreePath[ID];
+            InheritanceNode<T> node = _subtreePath[ID];
             while (node.ID != ID)
                 node = SubtreePath(node)[ID];
 
             return node;
         }
 
-        public bool TryGetNode(uint ID, out DataBlockNode<T>? node)
+        public bool TryGetNode(uint ID, out InheritanceNode<T>? node)
         {
             node = GetNode(ID);
             return node != null;
         }
 
-        public LinkedList<DataBlockNode<T>>? GetInheritanceList(uint ID)
+        public LinkedList<InheritanceNode<T>>? GetInheritanceList(uint ID)
         {
             if (!_subtreePath.ContainsKey(ID)) return null;
 
-            LinkedList<DataBlockNode<T>> nodeList = new();
+            LinkedList<InheritanceNode<T>> nodeList = new();
             // If there is a path to the node (i.e. this is not the target), follow the path
-            for (DataBlockNodeBase<T> node = this; SubtreePath(node).ContainsKey(ID); node = SubtreePath(node)[ID])
+            for (InheritanceNodeBase<T> node = this; SubtreePath(node).ContainsKey(ID); node = SubtreePath(node)[ID])
                 nodeList.AddLast(SubtreePath(node)[ID]);
 
             return nodeList;
         }
 
-        public void DebugPrintAllPaths()
+        public void DebugPrintAllPaths(string? groupName = null)
         {
-            IDBLogger.Log("Printing all inheritance chains for " + GameDataBlockBase<T>.m_fileNameNoExt);
+            IDBLogger.Log("Printing all inheritance chains" + (groupName != null ? " for " + groupName : ""));
             foreach(uint ID in GetIDs())
             {
                 var list = GetInheritanceList(ID);

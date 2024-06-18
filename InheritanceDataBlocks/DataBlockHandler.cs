@@ -7,7 +7,7 @@ using Il2CppSystem.Linq;
 
 namespace InheritanceDataBlocks
 {
-    internal class DataBlockHandler<T> : Il2CppJsonReferenceTypeHandler<T> where T : GameDataBlockBase<T>
+    internal sealed class DataBlockHandler<T> : Il2CppJsonReferenceTypeHandler<T> where T : GameDataBlockBase<T>
     {
         public override void OnRead(in Il2CppSystem.Object result, in JToken jToken)
         {

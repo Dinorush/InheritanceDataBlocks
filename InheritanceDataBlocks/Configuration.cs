@@ -9,7 +9,7 @@ using System.IO;
 
 namespace InheritanceDataBlocks
 {
-    public static class Configuration
+    internal static class Configuration
     {
         public static bool DebugChains { get; private set; } = false;
 

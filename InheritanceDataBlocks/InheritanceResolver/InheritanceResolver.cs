@@ -8,18 +8,18 @@ using System.Reflection;
 
 namespace InheritanceDataBlocks.InheritanceResolver
 {
-    public interface IResolver
+    internal interface IResolver
     {
         public void Reset();
         public void Run();
     }
 
-    public sealed class InheritanceResolver<T> : IResolver where T : GameDataBlockBase<T>
+    internal sealed class InheritanceResolver<T> : IResolver where T : GameDataBlockBase<T>
     {
         public static InheritanceResolver<T> Instance = new();
         
         // Use root node to handle nodes that don't have a parent (i.e. refer to vanilla)
-        private DataBlockRoot<T> _root = new();
+        private InheritanceRoot<T> _root = new();
 
         private bool _init = false;
 
@@ -38,14 +38,14 @@ namespace InheritanceDataBlocks.InheritanceResolver
         public void AddDataBlock(T block, string[] names, uint parentID)
         {
             uint ID = block.persistentID;
-            DataBlockNode<T> newNode = new(ID, block, names, parentID);
+            InheritanceNode<T> newNode = new(ID, block, names, parentID);
             _root.AddNode(newNode);
 
             if (_init)
             {
                 ResolveInheritance(ID, block);
                 if (Configuration.DebugChains)
-                    _root.DebugPrintAllPaths();
+                    _root.DebugPrintAllPaths(GameDataBlockBase<T>.m_fileNameNoExt);
             }
         }
 
@@ -55,14 +55,14 @@ namespace InheritanceDataBlocks.InheritanceResolver
                 ResolveInheritance(ID);
 
             if (Configuration.DebugChains)
-                _root.DebugPrintAllPaths();
+                _root.DebugPrintAllPaths(GameDataBlockBase<T>.m_fileNameNoExt);
 
             _init = true;
         }
 
         private void ResolveInheritance(uint ID, T? block = null)
         {
-            LinkedList<DataBlockNode<T>>? inheritanceList = _root.GetInheritanceList(ID);
+            LinkedList<InheritanceNode<T>>? inheritanceList = _root.GetInheritanceList(ID);
             if (inheritanceList == null || inheritanceList.Count == 0)
             {
                 IDBLogger.Error("Inheritance list for ID " + ID + " is null or empty! Block: " + GameDataBlockBase<T>.m_fileNameNoExt);
@@ -81,14 +81,14 @@ namespace InheritanceDataBlocks.InheritanceResolver
             // Instead, build on a new one, then copy onto the original.
             T newBlock = (T)Activator.CreateInstance(typeof(T))!;
             CopyProperties(baseBlock, newBlock);
-            foreach (DataBlockNode<T> node in inheritanceList)
+            foreach (InheritanceNode<T> node in inheritanceList)
                 ApplyNodeToData(newBlock, node);
             CopyProperties(newBlock, block);
         }
 
         private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public;
 
-        private static void ApplyNodeToData(T newBlock, DataBlockNode<T> node)
+        private static void ApplyNodeToData(T newBlock, InheritanceNode<T> node)
         {
             Type blockType = newBlock.GetType();
 
@@ -101,7 +101,7 @@ namespace InheritanceDataBlocks.InheritanceResolver
                     continue;
                 }
 
-                propertyInfo.SetValue(newBlock, propertyInfo.GetValue(node.Block));
+                propertyInfo.SetValue(newBlock, propertyInfo.GetValue(node.Data));
             }
         }
 
@@ -133,7 +133,7 @@ namespace InheritanceDataBlocks.InheritanceResolver
         }
     }
 
-    public static class InheritanceResolverManager
+    internal static class InheritanceResolverManager
     {
         private readonly static List<IResolver> _resolvers = new();
 
