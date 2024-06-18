@@ -1,6 +1,8 @@
 ﻿using InheritanceDataBlocks.Utils;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace InheritanceDataBlocks.Inheritance
@@ -21,12 +23,12 @@ namespace InheritanceDataBlocks.Inheritance
     public class InheritanceNode<T> : InheritanceNodeBase<T>
     {
         public uint ParentID { get; private set; }
-        public string[] Names { get; private set; }
+        public List<PropertyInfo> Properties { get; private set; }
         public T Data { get; private set; }
 
-        public InheritanceNode(uint ID, T data, string[] names, uint parentID) : base(ID)
+        public InheritanceNode(uint ID, T data, List<PropertyInfo> properties, uint parentID) : base(ID)
         {
-            Names = names;
+            Properties = properties;
             Data = data;
             ParentID = parentID;
         }
@@ -77,7 +79,7 @@ namespace InheritanceDataBlocks.Inheritance
         {
             if (TryGetNode(ID, out var node))
             {
-                RemoveNode(node!);
+                RemoveNode(node);
                 return true;
             }
             return false;
@@ -120,7 +122,7 @@ namespace InheritanceDataBlocks.Inheritance
             return node;
         }
 
-        public bool TryGetNode(uint ID, out InheritanceNode<T>? node)
+        public bool TryGetNode(uint ID, [MaybeNullWhen(false)] out InheritanceNode<T> node)
         {
             node = GetNode(ID);
             return node != null;

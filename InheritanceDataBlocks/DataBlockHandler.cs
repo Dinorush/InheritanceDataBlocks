@@ -4,6 +4,9 @@ using InheritanceDataBlocks.Inheritance;
 using InjectLib.JsonNETInjection.Handler;
 using InjectLib.JsonNETInjection;
 using Il2CppSystem.Linq;
+using System.Reflection;
+using System.Collections.Generic;
+using System;
 
 namespace InheritanceDataBlocks
 {
@@ -14,20 +17,21 @@ namespace InheritanceDataBlocks
             JObject jObject = jToken.TryCast<JObject>()!;
             if (jObject.TryGetValue("parentID", out JToken idToken))
             {
-                // Parse out field names. We will acquire values from the datablock itself.
-                string[] names = new string[jObject.Count-1];
-                JProperty[] properties = jObject.Properties().ToArray();
-                for (int i = 0, j = 0; i < names.Length; i++, j++)
+                // Parse out fields. We will acquire values from the datablock itself.
+                Type type = typeof(T);
+                List<PropertyInfo> properties = new(jObject.Count - 1);
+                JProperty[] jProperties = jObject.Properties().ToArray();
+                for (int i = 0; i < jObject.Count - 1; i++)
                 {
-                    if (properties[j].Name == "parentID")
-                    {
-                        i--;
+                    if (jProperties[i].Name == "parentID")
                         continue;
-                    }
-                    names[i] = properties[j].Name;
+
+                    PropertyInfo? info = InheritanceResolver<T>.Instance.CacheProperty(type, jProperties[i].Name);
+                    if (info != null)
+                        properties.Add(info);
                 }
 
-                InheritanceResolver<T>.Instance.AddDataBlock(result.TryCast<T>()!, names, (uint)idToken);
+                InheritanceResolver<T>.Instance.AddDataBlock(result.TryCast<T>()!, properties, (uint)idToken);
             }
         }
     }

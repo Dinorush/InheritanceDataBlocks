@@ -1,9 +1,7 @@
 ﻿using InheritanceDataBlocks.Utils;
 using GameData;
-using Il2CppSystem.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 
 namespace InheritanceDataBlocks.Inheritance
@@ -20,6 +18,7 @@ namespace InheritanceDataBlocks.Inheritance
         
         // Use root node to handle nodes that don't have a parent (i.e. refer to vanilla)
         private InheritanceRoot<T> _root = new();
+        private readonly Dictionary<string, PropertyInfo> _propertyCache = new();
 
         private bool _init = false;
 
@@ -35,10 +34,10 @@ namespace InheritanceDataBlocks.Inheritance
             _init = false;
         }
 
-        public void AddDataBlock(T block, string[] names, uint parentID)
+        public void AddDataBlock(T block, List<PropertyInfo> properties, uint parentID)
         {
             uint ID = block.persistentID;
-            InheritanceNode<T> newNode = new(ID, block, names, parentID);
+            InheritanceNode<T> newNode = new(ID, block, properties, parentID);
             _root.AddNode(newNode);
 
             if (_init)
@@ -57,6 +56,9 @@ namespace InheritanceDataBlocks.Inheritance
             if (Configuration.DebugChains)
                 _root.DebugPrintAllPaths(GameDataBlockBase<T>.m_fileNameNoExt);
 
+            // Free up memory since we no longer need it. Will slow down hot reload since cache must repopulate.
+            // May still cache stuff after Run(), but it is unlikely there'll be a lot, so it's fine.
+            _propertyCache.Clear();
             _init = true;
         }
 
@@ -80,56 +82,27 @@ namespace InheritanceDataBlocks.Inheritance
             // We want to keep the original block so we don't lose its info (applied on last step).
             // Instead, build on a new one, then copy onto the original.
             T newBlock = (T)Activator.CreateInstance(typeof(T))!;
-            CopyProperties(baseBlock, newBlock);
+            PropertyUtil.CopyProperties(baseBlock, newBlock);
             foreach (InheritanceNode<T> node in inheritanceList)
-                ApplyNodeToData(newBlock, node);
-            CopyProperties(newBlock, block);
+                foreach (PropertyInfo property in node.Properties)
+                    property.SetValue(newBlock, property.GetValue(node.Data));
+            PropertyUtil.CopyProperties(newBlock, block);
         }
 
-        private const BindingFlags FieldFlags = BindingFlags.Instance | BindingFlags.Public;
-
-        private static void ApplyNodeToData(T newBlock, InheritanceNode<T> node)
+        public PropertyInfo? CacheProperty(Type blockType, string name)
         {
-            Type blockType = newBlock.GetType();
+            if (_propertyCache.TryGetValue(name, out PropertyInfo? value))
+                return value;
 
-            foreach (string name in node.Names)
+            PropertyInfo? propertyInfo = name.ToProperty(typeof(T));
+            if (propertyInfo == null)
             {
-                PropertyInfo? propertyInfo = blockType.GetProperty(name, FieldFlags);
-                if (propertyInfo == null || !propertyInfo.CanWrite)
-                {
-                    IDBLogger.Warning("ID " + node.ID + " has property \"" + name + "\" which does not exist in " + blockType.Name);
-                    continue;
-                }
-
-                propertyInfo.SetValue(newBlock, propertyInfo.GetValue(node.Data));
+                IDBLogger.Warning("Cannot find property \"" + name + "\" in " + blockType.Name);
+                return null;
             }
-        }
 
-        // Ripped from PartialData
-        private static object CopyProperties(object source, object target)
-        {
-            foreach (var sourceProp in source.GetType().GetProperties())
-            {
-                var sourceType = sourceProp.PropertyType;
-
-                var targetProp = target.GetType().GetProperties().FirstOrDefault(x => x.Name == sourceProp.Name && x.PropertyType == sourceProp.PropertyType && x.CanWrite);
-                if (targetProp != null)
-                {
-                    if (sourceProp.Name.Contains("_k__BackingField"))
-                    {
-                        continue;
-                    }
-
-                    if (sourceType == typeof(IntPtr))
-                    {
-                        IDBLogger.Error("Pointer has detected on CopyProperties!!!!");
-                        continue;
-                    }
-
-                    targetProp.SetValue(target, sourceProp.GetValue(source));
-                }
-            }
-            return target;
+            _propertyCache[name] = propertyInfo;
+            return propertyInfo;
         }
     }
 
