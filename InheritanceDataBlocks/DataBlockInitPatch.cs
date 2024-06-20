@@ -1,10 +1,11 @@
 ﻿using GameData;
 using HarmonyLib;
 using InheritanceDataBlocks.Inheritance;
+using System;
 
 namespace InheritanceDataBlocks
 {
-    [HarmonyPatch(typeof(GameDataInit), nameof(GameDataInit.Initialize))]
+    [HarmonyPatch(typeof(GameDataInit), nameof(GameDataInit.ReInitialize))]
     internal static class DataBlockReInitPatch
     {
         [HarmonyPriority(Priority.High)]
@@ -13,12 +14,17 @@ namespace InheritanceDataBlocks
         {
             InheritanceResolverManager.ResetResolvers();
         }
+    }
 
+    [HarmonyPatch(typeof(GameDataInit), nameof(GameDataInit.Initialize))]
+    internal static class DataBlockInitPatch
+    {
         [HarmonyPriority(Priority.High)]
         [HarmonyWrapSafe]
         private static void Postfix()
         {
             InheritanceResolverManager.RunResolvers();
+            Activator.CreateInstance(typeof(GameDataManager), GameDataManager.Current.Pointer);
         }
     }
 }
