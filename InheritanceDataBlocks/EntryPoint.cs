@@ -15,7 +15,7 @@ internal sealed class EntryPoint : BasePlugin
     {
         IDBLogger.Log("Loading " + MODNAME);
         Configuration.Init();
-        DataBlockHandlerSetup.Init();
+        DataBlockHandlerManager.Init();
 
         Harmony harmonyInstance = new(MODNAME);
         harmonyInstance.PatchAll();
