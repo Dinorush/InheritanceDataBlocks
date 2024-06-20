@@ -66,6 +66,8 @@ namespace InheritanceDataBlocks.Inheritance
 
         public void DebugPrintAllPaths(string? groupName = null)
         {
+            if (_nodes.Count == 0) return;
+
             IDBLogger.Log("Printing all inheritance chains" + (groupName != null ? " for " + groupName : ""));
             foreach(uint ID in GetIDs())
             {
