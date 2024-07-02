@@ -5,7 +5,7 @@ using InheritanceDataBlocks.Utils;
 
 namespace InheritanceDataBlocks;
 
-[BepInPlugin("Dinorush." + MODNAME, MODNAME, "1.1.3")]
+[BepInPlugin("Dinorush." + MODNAME, MODNAME, "1.1.4")]
 [BepInDependency("GTFO.InjectLib", BepInDependency.DependencyFlags.HardDependency)]
 internal sealed class EntryPoint : BasePlugin
 {
