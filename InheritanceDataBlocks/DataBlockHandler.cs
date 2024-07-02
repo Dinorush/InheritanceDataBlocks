@@ -19,9 +19,9 @@ namespace InheritanceDataBlocks
             {
                 // Parse out fields. We will acquire values from the datablock itself.
                 Type type = typeof(T);
-                List<PropertyInfo> properties = new(jObject.Count - 1);
+                List<PropertyInfo> properties = new(jObject.Count);
                 JProperty[] jProperties = jObject.Properties().ToArray();
-                for (int i = 0; i < jObject.Count - 1; i++)
+                for (int i = 0; i < jObject.Count; i++)
                 {
                     if (jProperties[i].Name == "parentID")
                         continue;
