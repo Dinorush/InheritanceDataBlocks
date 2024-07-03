@@ -21,12 +21,12 @@ namespace InheritanceDataBlocks
                 Type type = typeof(T);
                 List<PropertyInfo> properties = new(jObject.Count - 1);
                 JProperty[] jProperties = jObject.Properties().ToArray();
-                for (int i = 0; i < jObject.Count; i++)
+                foreach (JProperty jProperty in jProperties)
                 {
-                    if (jProperties[i].Name == "parentID")
+                    if (jProperty.Name == "parentID")
                         continue;
 
-                    PropertyInfo? info = InheritanceAPI<T>.CacheProperty(type, jProperties[i].Name);
+                    PropertyInfo? info = InheritanceAPI<T>.CacheProperty(type, jProperty.Name);
                     if (info != null)
                         properties.Add(info);
                 }
