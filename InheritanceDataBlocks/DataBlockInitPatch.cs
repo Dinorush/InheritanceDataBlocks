@@ -24,7 +24,6 @@ namespace InheritanceDataBlocks
         private static void Postfix()
         {
             InheritanceResolverManager.RunResolvers();
-            Activator.CreateInstance(typeof(GameDataManager), GameDataManager.Current.Pointer);
         }
     }
 }
